@@ -3,3 +3,4 @@ python-dotenv
 shortuuid
 boto3
 botocore
+pytz

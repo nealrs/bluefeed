@@ -6,6 +6,7 @@ import sqlite3
 import shortuuid
 import datetime
 import boto3
+import pytz
 from botocore.exceptions import ClientError
 from xml.etree.ElementTree import Element, SubElement, tostring, ElementTree
 
@@ -96,15 +97,16 @@ def dbInit():
         )
       """)
   except sqlite3.OperationalError as e:
-    print("Failed to create table:", e)
+    print("-",e)
 
 def dbAdd(title, description, url, date, social):
   try:
     with sqlite3.connect(dbFile) as conn:
       conn.execute("INSERT INTO feed (title, description, url, date, social) VALUES (?, ?, ?, ?, ?)", (title, description, url, date, social))
-  except sqlite3.OperationalError as e:
-    print("Failed to insert item:", e)
-    #pass
+      print("* Added: ", title, description, social)
+  except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
+    #print("Failed to insert item:", e)
+    pass
 
 def buildRSS(dbFile, blacklist=[]):
   try:
@@ -175,7 +177,7 @@ def writeRSS(rss, filename):
   try:
     #s3 = boto3.resource("s3")
     s3 = boto3.client('s3', aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
-    print("Connected to s3!!")
+    #print("Connected to s3!!")
     
     s3.put_object(
       Bucket=bucket,
@@ -184,15 +186,16 @@ def writeRSS(rss, filename):
       ACL="public-read",
       ContentType="application/rss+xml"
     )
-    print("uploaded " + filename + " to s3")
+    print("- wrote " + filename + " to s3")
     return True
   except Exception as e:
-      print("Error saving "+filename+ " to s3")
+      print("^error writing "+filename+ " to s3")
       raise
       return
 
 # OK LET'S DO THIS
-print(datetime.datetime.now().astimezone().strftime('%A, %d-%m-%Y, %I:%M%p %Z'))
+print('\n*****************')
+print(datetime.datetime.now().astimezone(pytz.timezone('US/Eastern')).strftime('%A, %d-%m-%Y, %I:%M %p %Z'))
 
 ## load env vars &setup
 load_dotenv()
@@ -226,4 +229,4 @@ rssFiltered = buildRSS(dbFile, blacklist) # build _filtered_ feed
 
 writeRSS(rssAll, 'all.rss')
 writeRSS(rssFiltered, 'filtered.rss')
-print('*****************')
+print('*****************\n')
