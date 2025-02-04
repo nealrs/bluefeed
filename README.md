@@ -2,7 +2,7 @@
 
 # What is this?
 - This is a dockerized python script.
-- It polls a Bluesky feed, like this feed of article gift links, and persists title, link, description, and pubDate to a sqllite database.
+- It polls a Bluesky feed, like [this feed of article gift links](https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu), and persists title, link, description, and pubDate to a sqllite database.
 - It generates _two RSS feeds:
   - `all.rss` (self explanatory)
   - `filtered.rss` (reads from `blacklist.txt` to exclude specific keywords / phrases)
