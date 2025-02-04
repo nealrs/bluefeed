@@ -15,3 +15,4 @@ services:
       touch /app/.cron_log &&
       cron && tail -f /app/.cron_log
       "
+    restart: unless-stopped
