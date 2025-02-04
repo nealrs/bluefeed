@@ -28,6 +28,7 @@ def bsItems(feed):
   #gifts = []
   for item in feed:
     social = (item.post.like_count + item.post.repost_count)
+    description = ''
     p = item.post.record
     #print(p.created_at)
     #print(p)
@@ -37,11 +38,19 @@ def bsItems(feed):
         try:
           #print("Title:", p.embed.external.title)
           #print("URL:", p.embed.external.uri)
+          #print("Description:", p.embed.external.description)
           title = p.embed.external.title.replace("(Gift Article)", "").strip()
+          title = title.replace('â€™', "'").replace('â€œ', '"').replace('â€�', '"').replace('â€˜', "'").replace('â€”', '—')
+          
           if title == "":
             title = shortuuid.uuid()
-          #gifts.append({"title": title, "url": p.embed.external.uri, "date": p.created_at})
-          dbAdd(title, p.embed.external.uri, p.created_at, social)
+            #gifts.append({"title": title, "url": p.embed.external.uri, "date": p.created_at})
+          
+          if p.embed.external.description:
+            description = p.embed.external.description
+            description = description.replace('â€™', "'").replace('â€œ', '"').replace('â€�', '"').replace('â€˜', "'").replace('â€”', '—')
+          
+          dbAdd(title, description, p.embed.external.uri, p.created_at, social)
         except AttributeError:
           pass
         except sqlite3.IntegrityError as e:
@@ -60,7 +69,7 @@ def bsItems(feed):
               title = shortuuid.uuid()
               #print(title) 
               #gifts.append({"title": title, "url": facet.features.uri, "date": p.created_at})
-              dbAdd(title, p.embed.external.uri, p.created_at, social)
+              dbAdd(title, description, p.embed.external.uri, p.created_at, social)
           except AttributeError:
             pass
           except sqlite3.IntegrityError as e:
@@ -80,6 +89,7 @@ def dbInit():
         CREATE TABLE feed (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           title TEXT NOT NULL UNIQUE,
+          description TEXT NOT NULL,
           url TEXT NOT NULL UNIQUE,
           date DATE NOT NULL,
           social int NOT NULL
@@ -88,10 +98,10 @@ def dbInit():
   except sqlite3.OperationalError as e:
     print("Failed to create table:", e)
 
-def dbAdd(title, url, date, social):
+def dbAdd(title, description, url, date, social):
   try:
     with sqlite3.connect(dbFile) as conn:
-      conn.execute("INSERT INTO feed (title, url, date, social) VALUES (?, ?, ?, ?)", (title, url, date, social))
+      conn.execute("INSERT INTO feed (title, description, url, date, social) VALUES (?, ?, ?, ?, ?)", (title, description, url, date, social))
   except sqlite3.OperationalError as e:
     print("Failed to insert item:", e)
     #pass
@@ -135,20 +145,23 @@ def buildRSS(dbFile, blacklist=[]):
       for row in rows:
         item = SubElement(channel, 'item')
         
-        item_title = SubElement(item, 'guid')
-        item_title.text = row[2]
+        item_guid = SubElement(item, 'guid')
+        item_guid.text = row[3]
         
         item_title = SubElement(item, 'title')
         item_title.text = row[1]
         
+        item_description = SubElement(item, 'description')
+        item_description.text = row[2]
+        
         item_link = SubElement(item, 'link')
-        item_link.text = row[2]
+        item_link.text = row[3]
         
         item_pubDate = SubElement(item, 'pubDate')
         try:
-          item_pubDate.text = datetime.datetime.strptime(row[3], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%a, %d %b %Y %H:%M:%S GMT')
+          item_pubDate.text = datetime.datetime.strptime(row[4], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%a, %d %b %Y %H:%M:%S GMT')
         except ValueError:
-          item_pubDate.text = datetime.datetime.strptime(row[3], '%Y-%m-%dT%H:%M:%S%z').strftime('%a, %d %b %Y %H:%M:%S GMT')
+          item_pubDate.text = datetime.datetime.strptime(row[4], '%Y-%m-%dT%H:%M:%S%z').strftime('%a, %d %b %Y %H:%M:%S GMT')
 
       rss_str = tostring(rss, encoding='utf-8').decode('utf-8')
       xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -179,8 +192,9 @@ def writeRSS(rss, filename):
       return
 
 # OK LET'S DO THIS
-## load env vars &setup
+print(datetime.datetime.now().astimezone().strftime('%A, %d-%m-%Y, %I:%M%p %Z'))
 
+## load env vars &setup
 load_dotenv()
 feedId = os.getenv('feedId')
 login = os.getenv('login')
@@ -212,3 +226,4 @@ rssFiltered = buildRSS(dbFile, blacklist) # build _filtered_ feed
 
 writeRSS(rssAll, 'all.rss')
 writeRSS(rssFiltered, 'filtered.rss')
+print('*****************')

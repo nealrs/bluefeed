@@ -21,3 +21,9 @@ coup
 oligarch
 democracy
 oligarchy
+vote
+voter
+committee
+shooting
+ammendment
+
