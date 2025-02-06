@@ -131,7 +131,7 @@ def buildRSS(dbFile, blacklist=[]):
       channel = SubElement(rss, 'channel')
       
       atom = SubElement(channel, 'atom:link')
-      atom.set('href', 'http://www.nealshyam.com/rss/'+name+'.rss')
+      atom.set('href', 'http://nealshyam.com/rss/'+name+'.rss')
       atom.set('rel', 'self')
       atom.set('type', 'application/rss+xml')
 
@@ -139,10 +139,10 @@ def buildRSS(dbFile, blacklist=[]):
       title.text = "Gift Articles"
 
       link = SubElement(channel, 'link')
-      link.text = 'http://www.nealshyam.com/rss/'+name+'.rss'
+      link.text = 'http://nealshyam.com/rss/'+name+'.rss'
 
       description = SubElement(channel, 'description')
-      description.text = "A RSS feed of free article links from BlueSky"
+      description.text = "A RSS feed of free article links from BlueSky. Updated every 15 minutes. "
 
       for row in rows:
         item = SubElement(channel, 'item')
@@ -167,7 +167,7 @@ def buildRSS(dbFile, blacklist=[]):
 
       rss_str = tostring(rss, encoding='utf-8').decode('utf-8')
       xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
-      xml_stylesheet = '<?xml-stylesheet type="text/xsl" href="rss.xsl"?>' ##  this is probably the worst way to do this...
+      xml_stylesheet = '<?xml-stylesheet type="text/xsl" href="http://nealshyam.com/rss/rss.xsl"?>' ##  this is probably the worst way to do this...
       return f"{xml_declaration}\n{xml_stylesheet}\n{rss_str}"
   except sqlite3.OperationalError as e:
     print("Failed to fetch items:", e)
