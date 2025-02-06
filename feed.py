@@ -193,6 +193,72 @@ def writeRSS(rss, filename):
       raise
       return
 
+def updateHTML(blacklist):
+  html = """
+    <html>
+    <head>
+        <title>RSS feeds of Gift links from Bluesky</title>
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="description" content="RSS feeds of Gift links from Bluesky">
+        <meta property="og:title" content="RSS feeds of Gift links from Bluesky">
+        <meta property="og:description" content="RSS feeds of Gift links from Bluesky">
+        <meta property="og:type" content="website">
+        <meta name="author" content="Neal Shyam">
+        <link rel="canonical" href="https://nealshyam.com/rss/">
+        <meta property="og:url" content="https://nealshyam.com/rss/">
+        <!--<meta property="og:image" content="https://nealshyam.com/img/">-->
+        <styles>
+        <style>
+          body {
+            max-width: 70%;
+            margin: 0 auto;
+            text-align: left;
+            font-size: 1.2rem;
+            color: 111111;
+            background-color: #fffdf5;
+          }
+          h1, h3{
+            color: #38220f;
+          }
+
+          a {color: #38220f;}
+          a:active, a:hover {color: #967259;}
+        </style>
+    </head>
+    <body>
+      <div>
+        <h2>RSS Feed of Gift Links from Bluesky</h2>
+        <p>All links sourced from <a href="https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu" target="_blank">this feed of article gift links</a>. More info about how I built this & code available on <a href="https://github.com/nealrs/bluefeed">Github</a>.</p>
+
+        <p><a href="./all.rss" target="_blank">All articles</a></p>
+        <p><a href="./filtered.rss" target="_blank">Filtered feed</a> (excludes headlines with the following keywords:)</p>
+        <p id="blacklist"></p>
+      <hr>
+      <p>&copy; <a href="https://nealshyam.com" target="_blank">Neal Shyam</a></p>      </div>
+    </body>
+    </html>
+  """
+  if blacklist != []:
+    html = html.replace('<p id="blacklist"></p>', '<p id ="blacklist">' + ', '.join(blacklist) + '</p>')
+  
+  try:
+    s3 = boto3.client('s3', aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
+    #print("Connected to s3!!")
+    s3.put_object(
+      Bucket=bucket,
+      Key="rss/index.html",
+      Body=html,
+      ACL="public-read",
+      ContentType="text/html"
+    )
+    print("- wrote index to s3")
+    return True
+  except Exception as e:
+      print("^error writing index to s3")
+      raise
+      return
+    
+
 # OK LET'S DO THIS
 print('\n*****************')
 print(datetime.datetime.now().astimezone(pytz.timezone('US/Eastern')).strftime('%A, %d-%m-%Y, %I:%M %p %Z'))
@@ -229,4 +295,6 @@ rssFiltered = buildRSS(dbFile, blacklist) # build _filtered_ feed
 
 writeRSS(rssAll, 'all.rss')
 writeRSS(rssFiltered, 'filtered.rss')
+updateHTML(blacklist)
+
 print('*****************\n')
