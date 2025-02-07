@@ -68,3 +68,8 @@ terrorist
 fundamentalist
 voting
 political
+conservative
+liberal
+libertarian
+thiel
+vance
