@@ -199,21 +199,22 @@ def updateHTML(blacklist):
     <head>
         <title>RSS feeds of Gift links from Bluesky</title>
         <meta name="robots" content="noindex, nofollow">
-        <meta name="description" content="RSS feeds of Gift links from Bluesky">
-        <meta property="og:title" content="RSS feeds of Gift links from Bluesky">
-        <meta property="og:description" content="RSS feeds of Gift links from Bluesky">
+        <meta name="description" content="Gift links to popular news articles">
+        <meta property="og:title" content="Gift links to popular news articles">
+        <meta property="og:description" content="I converted a Blusky feed into an RSS feed.">
         <meta property="og:type" content="website">
-        <meta name="author" content="Neal Shyam">
+        <meta name="author" content="Neal Shyam | @nealrs">
         <link rel="canonical" href="https://nealshyam.com/rss/">
         <meta property="og:url" content="https://nealshyam.com/rss/">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!--<meta property="og:image" content="https://nealshyam.com/img/">-->
         <styles>
         <style>
           body {
-            max-width: 70%;
+            max-width: 80%;
             margin: 0 auto;
             text-align: left;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: 111111;
             background-color: #fffdf5;
           }
@@ -223,23 +224,44 @@ def updateHTML(blacklist):
 
           a {color: #38220f;}
           a:active, a:hover {color: #967259;}
+          table {
+            max-width: 70%;
+            border-collapse: collapse;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 1rem;
+          }
+          th {
+            background-color: #f2f2f2;
+            text-align: left;
+          }
         </style>
     </head>
     <body>
       <div>
-        <h2>RSS Feed of Gift Links from Bluesky</h2>
-        <p>All links sourced from <a href="https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu" target="_blank">this feed of article gift links</a>. More info about how I built this & code available on <a href="https://github.com/nealrs/bluefeed">Github</a>.</p>
+        <h2>RSS Feed of gift links</h2>
+        <p>I converted <a href="https://bsky.app/profile/davidsacerdote.bsky.social" target="_blank">David Sacerdot's</a> Bluesky feed of <a href="https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu" target="_blank">Gift Links / Articles</a> into an RSS feed.</p>
+        
+        <p>More info & code at <a href="https://github.com/nealrs/bluefeed">github.com/nealrs/bluefeed</a>.</p>
+        
+        <p>There are two feeds, which are updated every 20 minutes:</p>
 
-        <p><a href="./all.rss" target="_blank">All articles</a></p>
-        <p><a href="./filtered.rss" target="_blank">Filtered feed</a> (excludes headlines with the following keywords:)</p>
-        <p id="blacklist"></p>
-      <hr>
-      <p>&copy; <a href="https://nealshyam.com" target="_blank">Neal Shyam</a></p>      </div>
+        <p>&bull; <a href="./all.rss" target="_blank">All articles</a></p>
+        <p>&bull; <a href="./filtered.rss" target="_blank">Filtered feed</a> &mdash; excludes headlines with these keywords:</p>
+        <table id="blacklist"></table>
+        <hr>
+        <p>&copy; <a href="https://nealshyam.com" target="_blank">Neal Shyam</a></p>      
+      </div>
     </body>
     </html>
   """
   if blacklist != []:
-    html = html.replace('<p id="blacklist"></p>', '<p id ="blacklist">' + ', '.join(blacklist) + '</p>')
+    blacklist = sorted(blacklist)
+    rows = [blacklist[i:i+3] for i in range(0, len(blacklist), 3)]
+    table_rows = ''.join('<tr>' + ''.join(f'<td>{item}</td>' for item in row) + '</tr>' for row in rows)
+    html = html.replace('<table id="blacklist"></table>', f'<table id="blacklist">{table_rows}</table>')
   
   try:
     s3 = boto3.client('s3', aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
