@@ -116,10 +116,11 @@ def buildRSS(dbFile, blacklist=[]):
       
       if blacklist != []:
         name = "filtered"
-        query = "SELECT * FROM feed WHERE " + " AND ".join(["title NOT LIKE ?"] * len(blacklist)) + " ORDER BY social DESC, date DESC"
+        query = "SELECT id, title, description, url, date, social, date(date) AS day FROM feed WHERE social > 0 AND " + " AND ".join(["title NOT LIKE ?"] * len(blacklist)) + " ORDER BY day DESC, social DESC"
+        #print (query)
         cursor.execute(query, ['%' + term + '%' for term in blacklist])
       else:
-        query = "SELECT * FROM feed ORDER BY social DESC, date DESC"
+        query = "SELECT id, title, description, url, date, social, date(date) AS day FROM feed WHERE social > 0 ORDER BY social DESC, date DESC"
         cursor.execute(query)      
       #query = "SELECT * FROM feed ORDER BY date DESC"
       rows = cursor.fetchall()
