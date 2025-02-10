@@ -249,7 +249,7 @@ def updateHTML(blacklist, rssAll, rssFiltered):
     <body>
       <div>
         <h2>RSS Feed of gift links</h2>
-        <p>I converted <a href="https://bsky.app/profile/davidsacerdote.bsky.social" target="_blank">David Sacerdot's</a> Bluesky feed of <a href="https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu" target="_blank">Gift Links / Articles</a> into an RSS feed.</p>
+        <p>I converted <a href="https://bsky.app/profile/davidsacerdote.bsky.social" target="_blank">David Sacerdote's</a> Bluesky feed of <a href="https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu" target="_blank">Gift Links / Articles</a> into an RSS feed.</p>
         
         <p>More info & code at <a href="https://github.com/nealrs/bluefeed">github.com/nealrs/bluefeed</a>.</p>
         
