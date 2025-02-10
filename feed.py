@@ -9,6 +9,7 @@ import boto3
 import pytz
 from botocore.exceptions import ClientError
 from xml.etree.ElementTree import Element, SubElement, tostring, ElementTree
+from xml.etree.ElementTree import fromstring
 
 def bsClient(login, password):
   client = Client()
@@ -164,7 +165,8 @@ def buildRSS(dbFile, blacklist=[]):
         try:
           item_pubDate.text = datetime.datetime.strptime(row[4], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%a, %d %b %Y %H:%M:%S GMT')
         except ValueError:
-          item_pubDate.text = datetime.datetime.strptime(row[4], '%Y-%m-%dT%H:%M:%S%z').strftime('%a, %d %b %Y %H:%M:%S GMT')
+          item_pubDate.text = datetime.datetime.now().astimezone(pytz.timezone('US/Eastern')).strftime('%a, %d %b %Y %H:%M:%S GMT')
+          #2025-02-09T01:15:06.490817+00:00
 
       rss_str = tostring(rss, encoding='utf-8').decode('utf-8')
       xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -194,7 +196,7 @@ def writeRSS(rss, filename):
       raise
       return
 
-def updateHTML(blacklist):
+def updateHTML(blacklist, rssAll, rssFiltered):
   html = """
     <html>
     <head>
@@ -238,6 +240,10 @@ def updateHTML(blacklist):
             background-color: #f2f2f2;
             text-align: left;
           }
+          
+          .list{
+            font-size: 1rem;
+          }
         </style>
     </head>
     <body>
@@ -247,10 +253,15 @@ def updateHTML(blacklist):
         
         <p>More info & code at <a href="https://github.com/nealrs/bluefeed">github.com/nealrs/bluefeed</a>.</p>
         
-        <p>There are two feeds, which are updated every 20 minutes:</p>
+        <p>Last update: <span id="last-updated"></span></p>
 
-        <p>&bull; <a href="./all.rss" target="_blank">All articles</a></p>
-        <p>&bull; <a href="./filtered.rss" target="_blank">Filtered feed</a> &mdash; excludes headlines with these keywords:</p>
+        <h3><a href="./all.rss" target="_blank">All articles</a></h3>
+        <div id="all"></div> 
+        
+        <h3><a href="./filtered.rss" target="_blank">Filtered feed</h3>
+        <div id="filtered"></div>
+        
+        <h3>Blacklisted keywords</h3>
         <table id="blacklist"></table>
         <hr>
         <p>&copy; <a href="https://nealshyam.com" target="_blank">Neal Shyam</a></p>      
@@ -264,6 +275,21 @@ def updateHTML(blacklist):
     table_rows = ''.join('<tr>' + ''.join(f'<td>{item}</td>' for item in row) + '</tr>' for row in rows)
     html = html.replace('<table id="blacklist"></table>', f'<table id="blacklist">{table_rows}</table>')
   
+  if rssAll:
+    rss_xml = fromstring(rssAll)
+    items = rss_xml.findall('.//item')[:5]
+    list_items = ''.join(f'<li><a href="{item.find("link").text}">{item.find("title").text}</a></li>' for item in items)
+    html = html.replace('<div id="all"></div>', f'<div id="all"><ul class="list">{list_items}</ul></div>')
+  
+  if rssFiltered:
+    rss_xml = fromstring(rssFiltered)
+    items = rss_xml.findall('.//item')[:5]
+    list_items = ''.join(f'<li><a href="{item.find("link").text}">{item.find("title").text}</a></li>' for item in items)
+    html = html.replace('<div id="filtered"></div>', f'<div id="filtered"><ul class="list">{list_items}</ul></div>')
+  
+  current_time = datetime.datetime.now().astimezone(pytz.timezone('US/Eastern')).strftime('%I:%M %p, %m/%d/%y')
+  html = html.replace('<span id="last-updated"></span>', f'<span id="last-updated">{current_time}</span>')
+
   try:
     s3 = boto3.client('s3', aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
     #print("Connected to s3!!")
@@ -318,6 +344,6 @@ rssFiltered = buildRSS(dbFile, blacklist) # build _filtered_ feed
 
 writeRSS(rssAll, 'all.rss')
 writeRSS(rssFiltered, 'filtered.rss')
-updateHTML(blacklist)
+updateHTML(blacklist, rssAll, rssFiltered)
 
 print('*****************\n')
