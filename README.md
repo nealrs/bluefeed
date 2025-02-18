@@ -4,8 +4,8 @@
 - This is a dockerized python script.
 - It polls a Bluesky feed, like [this feed of article gift links](https://bsky.app/profile/davidsacerdote.bsky.social/feed/aaaixbb5liqbu), and persists title, link, description, pubDate, and social mention count to a sqllite database.
 - It generates _two RSS feeds:
-  - [`all.rss`](https://nealshyam.com/rss/all.rss) (self explanatory)
-  - [`filtered.rss`](https://nealshyam.com/rss/filtered.rss) (reads from `blacklist.txt` to exclude specific keywords / phrases)
+  - [`all.rss`](https://nealshyam.com/rss/all.rss) (`blacklistSources.txt` excludes sources you don't want. This is particuarly useful for sources that _appear_ to be in English, but are not.)
+  - [`filtered.rss`](https://nealshyam.com/rss/filtered.rss) (reads from `blacklistWords.txt` to exclude specific keywords)
 - Feeds are saved to an s3 bucket.
 - Both feeds exclude items with 0 social mentions. I might change this in the future, but also probably not.
 - Script runs every 20 minutes.

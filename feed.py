@@ -102,9 +102,10 @@ def dbInit():
 
 def dbAdd(title, description, url, date, social):
   try:
-    with sqlite3.connect(dbFile) as conn:
-      conn.execute("INSERT INTO feed (title, description, url, date, social) VALUES (?, ?, ?, ?, ?)", (title, description, url, date, social))
-      print("* Added: ", title, description, social)
+    if url and not any(bl in url for bl in blacklistSources):
+      with sqlite3.connect(dbFile) as conn:
+        conn.execute("INSERT INTO feed (title, description, url, date, social) VALUES (?, ?, ?, ?, ?)", (title, description, url, date, social))
+        print("* Added: ", title, description, social)
   except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
     #print("Failed to insert item:", e)
     pass
@@ -323,12 +324,19 @@ aws_secret = os.getenv('aws_secret_access_key')
 bucket = os.getenv('bucket')
 folder='rss/'
 
-# load blacklist
-blacklist = []
-with open('blacklist.txt', 'r') as file:
+# load blacklists
+blacklistWords = []
+with open('blacklistWords.txt', 'r') as file:
   for line in file:
-    blacklist.append(line.strip())
-#print(blacklist)
+    blacklistWords.append(line.strip())
+#print(blacklistWords)
+
+blacklistSources = []
+with open('blacklistSources.txt', 'r') as file:
+  for line in file:
+    blacklistSources.append(line.strip())
+#print(blacklistSourcesw)
+
 
 ## create db & update it with new items
 dbInit() # initialize the database & table if it doesen't e  print (blacklist)st    
@@ -338,12 +346,12 @@ bsItems(feed) # process & insert feed items.
 
 ## build feeds from db & save it to s3
 rssAll = buildRSS(dbFile) # build the RSS feed
-rssFiltered = buildRSS(dbFile, blacklist) # build _filtered_ feed
+rssFiltered = buildRSS(dbFile, blacklistWords) # build _filtered_ feed
 #print(rssAll)
 #print(rssFiltered)
 
 writeRSS(rssAll, 'all.rss')
 writeRSS(rssFiltered, 'filtered.rss')
-updateHTML(blacklist, rssAll, rssFiltered)
+updateHTML(blacklistWords, rssAll, rssFiltered)
 
 print('*****************\n')
