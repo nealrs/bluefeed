@@ -154,7 +154,16 @@ def buildRSS(dbFile, blacklist=[]):
         item_guid.text = row[3]
         
         item_title = SubElement(item, 'title')
-        item_title.text = row[1]
+        try:
+            parts = row[3].split('//')[-1].split('/')[0].split('.')
+            domain = parts[-2] if len(parts) >= 2 else parts[0]
+            domain = domain.capitalize()
+            if domain.startswith('The'):
+              domain = domain[3:].strip()
+        except (IndexError, AttributeError):
+            domain = "Unknown"
+            
+        item_title.text = f"[{domain}] {row[1]}" 
         
         item_description = SubElement(item, 'description')
         item_description.text = row[2]
@@ -348,7 +357,7 @@ bsItems(feed) # process & insert feed items.
 rssAll = buildRSS(dbFile) # build the RSS feed
 rssFiltered = buildRSS(dbFile, blacklistWords) # build _filtered_ feed
 #print(rssAll)
-#print(rssFiltered)
+print(rssFiltered)
 
 writeRSS(rssAll, 'all.rss')
 writeRSS(rssFiltered, 'filtered.rss')
