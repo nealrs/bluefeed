@@ -12,3 +12,4 @@ nikkei.com
 sueddeutsche.de
 ftm.nl
 faz.net
+medium.com
