@@ -13,6 +13,6 @@ services:
       chmod 0644 /etc/cron.d/bluefeed-cron &&
       crontab /etc/cron.d/bluefeed-cron &&
       touch /app/.cron_log &&
-      cron && tail -f /app/.cron_log
+      cron
       "
     restart: unless-stopped
